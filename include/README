@@ -1,0 +1,53 @@
+# Include Directory
+
+This directory contains all header files (.h) for the DC Motor Control project.
+
+## Header Files
+
+### motor.h
+Defines the Motor class for controlling a DC motor via L293D motor driver.
+- **Pins**: D9 (IN1), D10 (IN2)
+- **Features**: Bidirectional control, PWM speed control
+- **Range**: -100 (full reverse) to +100 (full forward)
+
+### led.h
+Defines the StatusLED class for RGB LED visual feedback.
+- **Pins**: D3 (Red), D11 (Green), D2 (Blue - Error indicator)
+- **Features**: Smooth color transitions, blinking effects, error mode
+- **Color Mapping**: Red (0%) → Yellow (50%) → Green (100%)
+- **Error Mode**: Blue LED blinks at 500ms intervals for invalid sensor readings
+
+### ultraSonic.h
+Defines the UltraSonic class for HC-SR04 distance sensor.
+- **Pins**: D5 (TRIG), D6 (ECHO)
+- **Features**: Distance measurement in centimeters
+- **Range**: 2-400 cm
+
+## Usage
+
+All header files use `#pragma once` for include guards and are designed to work with Arduino framework. Include them in your source files as needed:
+
+```cpp
+#include "motor.h"
+#include "ultraSonic.h"
+#include "led.h"
+```
+
+## Pin Summary
+
+| Component | Pin | Arduino |
+|-----------|-----|---------|
+| Motor IN1 | D9 | Digital 9 (PWM) |
+| Motor IN2 | D10 | Digital 10 (PWM) |
+| Ultrasonic TRIG | D5 | Digital 5 |
+| Ultrasonic ECHO | D6 | Digital 6 |
+| LED Red | D3 | Digital 3 (PWM) |
+| LED Green | D11 | Digital 11 (PWM) |
+| LED Blue | D2 | Digital 2 (Error) |
+
+## Notes
+
+- L293D EN pin is tied HIGH with 10kΩ resistor (always enabled)
+- All classes follow public/private encapsulation principles
+- Static constants are used for pin definitions
+- Classes are designed for Arduino Uno R3 compatibility
