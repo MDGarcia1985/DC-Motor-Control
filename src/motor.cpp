@@ -1,6 +1,7 @@
 /**
  * @file motor.cpp
  * @brief Implementation of DC motor control
+ * @version 1.0.0
  * 
  * @author Michael Garcia, M&E Design
  * @copyright Copyright (c) 2025 Michael Garcia, M&E Design

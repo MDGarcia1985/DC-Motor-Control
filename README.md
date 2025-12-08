@@ -24,7 +24,9 @@ This project implements an intelligent motor control system that adjusts motor s
 - HC-SR04 ultrasonic sensor
 - Common cathode RGB LED
 - 10kΩ resistor (for L293D EN pin)
-- 220Ω resistors (3x, for RGB LED current limiting)
+- 330Ω resistors (3x, for RGB LED current limiting)
+- 100µF polarized capacitor (power supply filtering)
+- 100nF ceramic capacitors (2x, for L293D and motor noise suppression)
 - Breadboard and jumper wires
 - External power supply for motor (6-12V)
 
@@ -108,13 +110,24 @@ pio device monitor
 
 ### L293D Connections
 - VCC1 (Pin 16): 5V from Arduino
-- VCC2 (Pin 8): External motor power (6-12V)
+- VCC2 (Pin 8): External motor power (6-12V) with 100nF ceramic capacitor to GND
 - GND (Pins 4, 5, 12, 13): Common ground
 - EN1 (Pin 1): Tied HIGH with 10kΩ resistor
 - IN1 (Pin 2): Arduino D9
 - IN2 (Pin 7): Arduino D10
 - OUT1 (Pin 3): Motor terminal 1
 - OUT2 (Pin 6): Motor terminal 2
+
+### Capacitor Placement
+- 100µF polarized capacitor: Across motor power supply (+/- terminals)
+- 100nF ceramic capacitor: VCC2 (Pin 8) to GND on L293D
+- 100nF ceramic capacitor: Across motor terminals (noise suppression)
+
+### RGB LED
+- Red (D3): 330Ω current limiting resistor
+- Green (D11): 330Ω current limiting resistor
+- Blue (D2): 330Ω current limiting resistor
+- Common cathode to GND
 
 ### Power Supply
 - Arduino powered via USB or barrel jack
@@ -155,7 +168,8 @@ if (now - lastUpdate >= 10)  // Change from 10ms to desired interval
 
 - Never exceed motor voltage rating
 - Ensure proper heat dissipation for L293D
-- Use current-limiting resistors for RGB LED
+- Use 330Ω current-limiting resistors for RGB LED
+- Install capacitors for noise suppression and stability
 - Connect all grounds together
 - Do not draw motor power from Arduino 5V pin
 

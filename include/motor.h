@@ -1,6 +1,7 @@
 /**
  * @file motor.h
  * @brief DC Motor control using L293D motor driver
+ * @version 1.0.0
  * 
  * Controls motor direction and speed via PWM on analog pins A0 and A1.
  * Supports bidirectional control: positive values for forward, negative for reverse.

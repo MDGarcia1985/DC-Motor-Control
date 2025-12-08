@@ -1,6 +1,7 @@
 /**
  * @file led.h
  * @brief RGB LED status indicator with smooth color transitions
+ * @version 1.0.0
  * 
  * Displays motor speed via color gradient:
  * - Red (0%) -> Yellow (50%) -> Green (100%)

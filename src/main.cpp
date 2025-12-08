@@ -1,6 +1,7 @@
 /**
  * @file main.cpp
  * @brief DC Motor Control with Ultrasonic Distance Sensing
+ * @version 1.0.0
  * 
  * Controls motor speed based on ultrasonic distance measurements:
  * - Distance < 10cm: Motor stops (0%)
