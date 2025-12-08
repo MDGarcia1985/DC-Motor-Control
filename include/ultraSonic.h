@@ -1,7 +1,7 @@
 /**
  * @file ultraSonic.h
  * @brief HC-SR04 ultrasonic distance sensor interface
- * @version 1.0.0
+ * @version 1.0.1
  * 
  * Measures distance using ultrasonic pulses.
  * Effective range: 2cm to 400cm
