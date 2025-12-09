@@ -11,7 +11,8 @@ This project implements an intelligent motor control system that adjusts motor s
 - **Distance-Based Speed Control**: Motor speed automatically adjusts based on proximity
 - **Bidirectional Motor Control**: Supports forward and reverse operation
 - **Visual Status Indicator**: RGB LED displays speed via color gradient (Red → Yellow → Green)
-- **Error Detection**: Blue LED blinks when sensor readings are invalid
+- **OLED Display**: Real-time display of distance, PWM output, direction, and status bar
+- **Reverse Operation**: Motor reverses when object detected within 10cm
 - **Smooth Transitions**: Gradual color changes and special blinking effects
 - **Real-Time Operation**: 100Hz update rate for responsive control
 
@@ -22,7 +23,8 @@ This project implements an intelligent motor control system that adjusts motor s
 - L293D motor driver IC
 - DC motor (6-12V)
 - HC-SR04 ultrasonic sensor
-- Common cathode RGB LED
+- SSD1306 OLED display (128x64, I2C)
+- Common anode RGB LED
 - 10kΩ resistor (for L293D EN pin)
 - 330Ω resistors (3x, for RGB LED current limiting)
 - 100µF polarized capacitor (power supply filtering)
@@ -42,6 +44,8 @@ This project implements an intelligent motor control system that adjusts motor s
 | **RGB LED** | Red | D3 (PWM) |
 | | Green | D11 (PWM) |
 | | Blue | D2 (Error) |
+| **OLED Display (I2C)** | SDA | AD4 |
+| | SCL | AD5 |
 
 ## Software Architecture
 
@@ -63,25 +67,33 @@ This project implements an intelligent motor control system that adjusts motor s
 - Special blinking effect for 50% → 0% transitions
 - Error mode: Blue LED blinks at 500ms intervals
 
+#### Display Class (`display.h/cpp`)
+- SSD1306 OLED display interface via I2C (128x64)
+- Shows distance measurement in centimeters or "No Obstruction"
+- Displays PWM output percentage with direction (FWD/REV)
+- Visual status bar for motor speed (uses absolute value)
+- Optimized for low RAM usage
+
 ## Operation Logic
 
 ### Distance Zones
 
 | Distance Range | Motor Speed | LED Color |
 |----------------|-------------|-----------|
-| < 10 cm | 0% (Stop) | Red |
-| 10-30 cm | 50% (Medium) | Yellow |
-| > 30 cm | 100% (Full) | Green |
-| Invalid/Error | 0% (Stop) | Blue (Blinking) |
+| < 10 cm | -50% (Reverse) | Red |
+| 10-30 cm | 50% (Forward) | Yellow (Blinking) |
+| > 30 cm | 100% (Forward) | Green |
+| No Obstruction (0 cm) | 100% (Forward) | Green |
 
 ### Control Flow
 
-1. Ultrasonic sensor measures distance every 10ms
-2. Distance value determines target motor speed
-3. Invalid readings trigger error mode (blue LED blinks, motor stops)
-4. Motor speed is applied via PWM
+1. Ultrasonic sensor measures distance every 10ms (100Hz update rate)
+2. Distance value determines target motor speed and direction
+3. Timeout (>38ms) returns 0 = no obstruction detected
+4. Motor speed is applied via PWM (-100 to +100)
 5. LED color smoothly transitions to match speed
-6. Process repeats continuously
+6. OLED display updates with distance, PWM%, direction (FWD/REV), and status bar
+7. Process repeats continuously
 
 ## Building and Uploading
 
@@ -129,6 +141,12 @@ pio device monitor
 - Blue (D2): 330Ω current limiting resistor
 - Common cathode to GND
 
+### OLED Display (I2C)
+- SDA: Arduino AD4
+- SCL: Arduino AD5
+- VCC: 5V or 3.3V (check display specifications)
+- GND: Common ground
+
 ### Power Supply
 - Arduino powered via USB or barrel jack
 - Motor requires separate power supply (6-12V)
@@ -159,10 +177,13 @@ if (now - lastUpdate >= 10)  // Change from 10ms to desired interval
 | Issue | Possible Cause | Solution |
 |-------|----------------|----------|
 | Motor doesn't run | Insufficient power | Use external power supply for motor |
-| Blue LED blinking | Invalid sensor readings | Check TRIG/ECHO connections and sensor power |
-| Erratic distance readings | Sensor wiring | Check TRIG/ECHO connections |
-| LED not lighting | Wrong LED type | Ensure common cathode RGB LED |
-| Motor runs one direction only | Wiring error | Verify IN1/IN2 connections |
+| System freezes after 30-40s | RAM overflow | Reduce update rate or disable serial debugging |
+| Display not working | I2C connection | Check SDA/SCL connections on AD4/AD5 |
+| Display shows garbage | Wrong I2C address | Verify display uses 0x3C address |
+| Erratic distance readings | Sensor wiring | Check TRIG/ECHO connections on D5/D6 |
+| LED colors inverted | Common cathode LED | Change to non-inverted logic in led.cpp setRGB() |
+| Motor runs one direction only | Wiring error | Verify IN1/IN2 connections on D9/D10 |
+| Sensor always shows 0cm | Timeout/no echo | Check sensor power (5V) and orientation |
 
 ## Safety Notes
 
@@ -181,4 +202,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Michael Garcia  
 M&E Design  
+Email: michael@mandedesign.studio  
+Website: www.mandedesign.studio  
 Copyright © 2025

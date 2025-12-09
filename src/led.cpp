@@ -1,9 +1,11 @@
 /**
  * @file led.cpp
  * @brief Implementation of RGB LED status indicator
- * @version 1.0.1
+ * @version 2.0.0
  * 
  * @author Michael Garcia, M&E Design
+ * @contact michael@mandedesign.studio
+ * @website www.mandedesign.studio
  * @copyright Copyright (c) 2025 Michael Garcia, M&E Design
  * @license MIT License
  */
@@ -23,10 +25,16 @@ void StatusLED::begin()
 
 void StatusLED::setRGB(uint8_t r, uint8_t g, uint8_t b)
 {
-    // Write PWM values to RGB pins
-    analogWrite(PIN_R, r);
-    analogWrite(PIN_G, g);
-    analogWrite(PIN_B, b);
+    // Common anode LED (active LOW - inverted logic)
+    analogWrite(PIN_R, 255 - r);
+    analogWrite(PIN_G, 255 - g);
+    analogWrite(PIN_B, 255 - b);
+    
+    // amazonq-ignore-next-line
+    // For common cathode LED, use these lines instead:
+    // analogWrite(PIN_R, r);
+    // analogWrite(PIN_G, g);
+    // analogWrite(PIN_B, b);
 }
 
 void StatusLED::setError(bool active)
@@ -60,6 +68,7 @@ void StatusLED::update(int commandedPercent)
     }
 
     // Constrain input to valid range
+    // amazonq-ignore-next-line
     commandedPercent = constrain(commandedPercent, 0, 100);
 
     // Detect speed change and transition type

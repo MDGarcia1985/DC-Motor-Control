@@ -1,9 +1,13 @@
 /**
  * @file motor.cpp
  * @brief Implementation of DC motor control
- * @version 1.0.1
+ * @version 2.0.0
+ * 
+ * Implements basic forward/reverse control with deadband filtering.
  * 
  * @author Michael Garcia, M&E Design
+ * @contact michael@mandedesign.studio
+ * @website www.mandedesign.studio
  * @copyright Copyright (c) 2025 Michael Garcia, M&E Design
  * @license MIT License
  */

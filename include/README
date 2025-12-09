@@ -6,9 +6,10 @@ This directory contains all header files (.h) for the DC Motor Control project.
 
 ### motor.h
 Defines the Motor class for controlling a DC motor via L293D motor driver.
-- **Pins**: D9 (IN1), D10 (IN2)
+- **Pins**: D9 (IN1), D10 (IN2) - PWM capable
 - **Features**: Bidirectional control, PWM speed control
 - **Range**: -100 (full reverse) to +100 (full forward)
+- **Note**: EN pin tied HIGH with 10kΩ resistor (always enabled)
 
 ### led.h
 Defines the StatusLED class for RGB LED visual feedback.
@@ -17,11 +18,21 @@ Defines the StatusLED class for RGB LED visual feedback.
 - **Color Mapping**: Red (0%) → Yellow (50%) → Green (100%)
 - **Error Mode**: Blue LED blinks at 500ms intervals for invalid sensor readings
 
+### display.h
+Defines the Display class for OLED status display.
+- **Pins**: AD4 (SDA), AD5 (SCL) - I2C interface
+- **Display**: SSD1306 128x64 OLED via I2C
+- **Features**: Distance readout, PWM percentage with direction (FWD/REV), status bar
+- **Library**: U8g2 (olikraus/U8g2@^2.35.30)
+- **Optimization**: Uses smaller fonts to reduce RAM usage
+
 ### ultraSonic.h
 Defines the UltraSonic class for HC-SR04 distance sensor.
 - **Pins**: D5 (TRIG), D6 (ECHO)
 - **Features**: Distance measurement in centimeters
 - **Range**: 2-400 cm
+- **Timeout**: Returns 0 when duration >= 38ms (no object detected)
+- **Calculation**: distance = duration / 58
 
 ## Usage
 
@@ -44,6 +55,8 @@ All header files use `#pragma once` for include guards and are designed to work 
 | LED Red | D3 | Digital 3 (PWM) |
 | LED Green | D11 | Digital 11 (PWM) |
 | LED Blue | D2 | Digital 2 (Error) |
+| OLED SDA | AD4 | Analog 4 (I2C) |
+| OLED SCL | AD5 | Analog 5 (I2C) |
 
 ## Notes
 

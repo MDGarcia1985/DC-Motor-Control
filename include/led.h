@@ -1,13 +1,15 @@
 /**
  * @file led.h
  * @brief RGB LED status indicator with smooth color transitions
- * @version 1.0.1
+ * @version 2.0.0
  * 
  * Displays motor speed via color gradient:
  * - Red (0%) -> Yellow (50%) -> Green (100%)
  * - Smooth transitions with blinking effect on 50->0 transition
  * 
  * @author Michael Garcia, M&E Design
+ * @contact michael@mandedesign.studio
+ * @website www.mandedesign.studio
  * @copyright Copyright (c) 2025 Michael Garcia, M&E Design
  * @license MIT License
  */
