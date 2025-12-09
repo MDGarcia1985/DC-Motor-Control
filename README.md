@@ -4,16 +4,17 @@ Arduino-based DC motor control system with ultrasonic distance sensing and RGB L
 
 ## Overview
 
-This project implements an intelligent motor control system that adjusts motor speed based on real-time distance measurements from an ultrasonic sensor. Visual feedback is provided through an RGB LED that displays a color gradient corresponding to motor speed.
+This project implements an intelligent motor control system that dynamically adjusts motor speed based on real-time distance measurements from an ultrasonic sensor. Features smooth gradient speed control (5-60cm range), timed reverse maneuvers, and visual feedback through an RGB LED color gradient.
 
 ## Features
 
-- **Distance-Based Speed Control**: Motor speed automatically adjusts based on proximity
-- **Bidirectional Motor Control**: Supports forward and reverse operation
+- **Dynamic Speed Mapping**: Smooth gradient from 0-100% across 5-60cm range with 2% quantization
+- **Timed Reverse Maneuver**: Executes STOP (500ms) → REVERSE (200ms) → SLOW-FWD when distance ≥60cm
+- **Rate-Limited Sensing**: 50ms minimum interval prevents echo overlap and unstable readings
+- **Bidirectional Motor Control**: PWM-based forward/reverse with 3% deadband
 - **Visual Status Indicator**: RGB LED displays speed via color gradient (Red → Yellow → Green)
-- **OLED Display**: Real-time display of distance, PWM output, direction, and status bar
-- **Reverse Operation**: Motor reverses when object detected within 10cm
-- **Smooth Transitions**: Gradual color changes and special blinking effects
+- **OLED Display**: Real-time distance, PWM%, direction (FWD/REV), and status bar
+- **Non-Blocking State Machine**: Fully millis()-based timing, no delay() calls
 - **Real-Time Operation**: 100Hz update rate for responsive control
 
 ## Hardware Requirements
@@ -51,15 +52,19 @@ This project implements an intelligent motor control system that adjusts motor s
 
 ### Class Structure
 
-#### Motor Class (`motor.h/cpp`)
-- Controls L293D motor driver via PWM
-- Supports speed range: -100 (full reverse) to +100 (full forward)
-- Automatic direction control based on sign
+#### Motor Class (`motor.h/cpp`) v2.1.0
+- Controls L293D motor driver via PWM on IN1/IN2
+- Speed range: -100 (full reverse) to +100 (full forward)
+- 3% deadband prevents audible whine from tiny PWM values
+- Caches last command to avoid redundant pin writes
+- Separate brake() method for active braking vs coasting
 
-#### UltraSonic Class (`ultraSonic.h/cpp`)
-- Interfaces with HC-SR04 sensor
-- Returns distance in centimeters (2-400cm range)
+#### UltraSonic Class (`ultraSonic.h/cpp`) v3.0.0
+- Interfaces with HC-SR04 sensor with rate limiting
+- Enforces 50ms minimum between readings to prevent echo overlap
+- Returns cached value when polled too fast
 - 30ms timeout for invalid readings
+- Returns distance in centimeters (2-400cm valid range, 0 = no obstruction)
 
 #### StatusLED Class (`led.h/cpp`)
 - RGB LED control with smooth color transitions
@@ -76,24 +81,32 @@ This project implements an intelligent motor control system that adjusts motor s
 
 ## Operation Logic
 
-### Distance Zones
+### Dynamic Speed Mapping (v3.0.0)
 
-| Distance Range | Motor Speed | LED Color |
-|----------------|-------------|-----------|
-| < 10 cm | -50% (Reverse) | Red |
-| 10-30 cm | 50% (Forward) | Yellow (Blinking) |
-| > 30 cm | 100% (Forward) | Green |
-| No Obstruction (0 cm) | 100% (Forward) | Green |
+| Distance Range | Motor Speed | LED Color | Mode |
+|----------------|-------------|-----------|------|
+| ≤ 5 cm | 0% (Stop) | Red | NORMAL |
+| 5-60 cm | 0-100% (Gradient) | Red → Yellow → Green | NORMAL |
+| ≥ 60 cm | Timed Maneuver | Varies | STOPPING → REVERSING → SLOW_FORWARD |
+| 0 cm (No obstruction) | 100% (Forward) | Green | NORMAL |
+
+### Timed Reverse Maneuver
+
+When distance ≥ 60cm, system executes:
+1. **STOPPING**: 0% for 500ms
+2. **REVERSING**: -20% for 200ms
+3. **SLOW_FORWARD**: +20% until valid reading < 60cm
+4. Returns to NORMAL mode with dynamic mapping
 
 ### Control Flow
 
-1. Ultrasonic sensor measures distance every 10ms (100Hz update rate)
-2. Distance value determines target motor speed and direction
-3. Timeout (>38ms) returns 0 = no obstruction detected
-4. Motor speed is applied via PWM (-100 to +100)
-5. LED color smoothly transitions to match speed
-6. OLED display updates with distance, PWM%, direction (FWD/REV), and status bar
-7. Process repeats continuously
+1. Main loop executes at 100Hz (10ms intervals)
+2. Ultrasonic sensor reads distance (rate-limited to 50ms minimum)
+3. State machine evaluates distance and current mode
+4. Speed calculated via dynamic mapping (5-60cm → 0-100%) with 2% quantization
+5. Motor speed applied via PWM with 3% deadband
+6. LED color smoothly transitions to match speed
+7. OLED display updates with distance, PWM%, direction, and status bar
 
 ## Building and Uploading
 
@@ -154,13 +167,30 @@ pio device monitor
 
 ## Customization
 
-### Adjusting Distance Thresholds
+### Adjusting Distance Mapping Range
 Edit `main.cpp`:
 ```cpp
-if (distance < 10)        // Change stop threshold
-    speedPct = 0;
-else if (distance < 30)   // Change medium speed threshold
-    speedPct = 50;
+static const int MIN_DIST_CM = 5;    // distance where speed = 0%
+static const int MAX_DIST_CM = 60;   // distance where speed = 100%
+```
+
+### Adjusting Maneuver Timing
+Edit `main.cpp`:
+```cpp
+static const unsigned long STOP_TIME_MS    = 500; // stop duration
+static const unsigned long REVERSE_TIME_MS = 200; // reverse duration
+```
+
+### Adjusting Motor Deadband
+Edit `motor.h`:
+```cpp
+static const uint8_t DEAD_BAND_PERCENT = 3;  // minimum active speed
+```
+
+### Adjusting Sensor Rate Limit
+Edit `ultraSonic.h`:
+```cpp
+static const unsigned long MIN_INTERVAL_MS = 50UL; // ~20 Hz max
 ```
 
 ### Modifying LED Colors
@@ -169,7 +199,7 @@ Edit `led.cpp` color mapping in the `update()` function.
 ### Changing Update Rate
 Edit `main.cpp`:
 ```cpp
-if (now - lastUpdate >= 10)  // Change from 10ms to desired interval
+static const unsigned long UPDATE_INTERVAL_MS = 10;  // main loop pacing
 ```
 
 ## Troubleshooting
@@ -177,13 +207,14 @@ if (now - lastUpdate >= 10)  // Change from 10ms to desired interval
 | Issue | Possible Cause | Solution |
 |-------|----------------|----------|
 | Motor doesn't run | Insufficient power | Use external power supply for motor |
-| System freezes after 30-40s | RAM overflow | Reduce update rate or disable serial debugging |
+| Unstable distance readings | Sensor polled too fast | Rate limiting enforced at 50ms minimum |
 | Display not working | I2C connection | Check SDA/SCL connections on AD4/AD5 |
 | Display shows garbage | Wrong I2C address | Verify display uses 0x3C address |
 | Erratic distance readings | Sensor wiring | Check TRIG/ECHO connections on D5/D6 |
 | LED colors inverted | Common cathode LED | Change to non-inverted logic in led.cpp setRGB() |
 | Motor runs one direction only | Wiring error | Verify IN1/IN2 connections on D9/D10 |
-| Sensor always shows 0cm | Timeout/no echo | Check sensor power (5V) and orientation |
+| Sensor always shows 0cm | Timeout/no echo | Check sensor power (5V), orientation, and 50ms rate limit |
+| Motor whines at low speed | PWM too low | 3% deadband automatically applied |
 
 ## Safety Notes
 

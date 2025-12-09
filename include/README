@@ -4,10 +4,10 @@ This directory contains all header files (.h) for the DC Motor Control project.
 
 ## Header Files
 
-### motor.h
+### motor.h (v2.1.0)
 Defines the Motor class for controlling a DC motor via L293D motor driver.
 - **Pins**: D9 (IN1), D10 (IN2) - PWM capable
-- **Features**: Bidirectional control, PWM speed control
+- **Features**: Bidirectional control, 3% deadband, command caching, separate brake() method
 - **Range**: -100 (full reverse) to +100 (full forward)
 - **Note**: EN pin tied HIGH with 10kΩ resistor (always enabled)
 
@@ -26,12 +26,12 @@ Defines the Display class for OLED status display.
 - **Library**: U8g2 (olikraus/U8g2@^2.35.30)
 - **Optimization**: Uses smaller fonts to reduce RAM usage
 
-### ultraSonic.h
+### ultraSonic.h (v3.0.0)
 Defines the UltraSonic class for HC-SR04 distance sensor.
 - **Pins**: D5 (TRIG), D6 (ECHO)
-- **Features**: Distance measurement in centimeters
-- **Range**: 2-400 cm
-- **Timeout**: Returns 0 when duration >= 38ms (no object detected)
+- **Features**: Rate-limited distance measurement (50ms minimum interval), cached readings
+- **Range**: 2-400 cm (0 = no obstruction/invalid)
+- **Timeout**: 30ms echo timeout
 - **Calculation**: distance = duration / 58
 
 ## Usage

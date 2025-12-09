@@ -1,7 +1,7 @@
 /**
  * @file motor.h
  * @brief DC Motor control using L293D motor driver
- * @version 2.0.0
+ * @version 2.1.0
  * 
  * Controls motor direction and speed via PWM on IN1/IN2.
  * Supports bidirectional control:
@@ -12,8 +12,6 @@
  * EN pin is tied high with 10kΩ resistor (always enabled).
  * 
  * @author Michael Garcia, M&E Design
- * @contact michael@mandedesign.studio
- * @website www.mandedesign.studio
  * @copyright Copyright (c) 2025 Michael Garcia, M&E Design
  * @license MIT License
  */
